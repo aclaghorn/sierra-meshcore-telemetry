@@ -1,0 +1,127 @@
+# MeshCore repeater telemetry collector configuration.
+#
+# Copy to config/config.yaml and edit. The file is re-read at the start of
+# every polling cycle, so edits take effect without restarting the container.
+
+device:
+  # Serial port of the MeshCore companion radio.
+  port: /dev/ttyACM0
+  baudrate: 115200
+
+  # Bytes per hop used by the routes below: 0 = 1 byte per hop,
+  # 1 = 2 bytes per hop. Omit to use whatever the companion reports.
+  # Get the companion's own setting with `meshcore-cli get path_hash_mode`.
+  # path_hash_mode: 0
+
+  # Companion TX power in dBm (0-30). Omit to leave whatever the companion
+  # already has. Lower this if the companion trips a Raspberry Pi USB port's
+  # over-current protection during transmit (seen as the serial link
+  # dropping mid-request, right after sending). 14 is a good starting point.
+  # tx_power: 14
+
+polling:
+  # How often a full sweep of all repeaters is started, in seconds.
+  interval_seconds: 900
+
+  # How many times each repeater is tried per cycle before giving up.
+  attempts: 3
+
+  # Delay between retry attempts for the same repeater, in seconds.
+  retry_delay_seconds: 20
+
+  # Delay between two different repeaters, in seconds. Keeps the mesh from
+  # being flooded with back-to-back requests.
+  stagger_seconds: 5
+
+  # Per-request timeout, in seconds. 0 lets the firmware suggest a timeout
+  # based on the path length (recommended).
+  request_timeout_seconds: 0
+
+  # Lower bound applied to the firmware suggested timeout, in seconds.
+  min_request_timeout_seconds: 20
+
+  # Re-login before every telemetry request instead of relying on the
+  # repeater keeping the session open.
+  always_login: true
+
+storage:
+  path: /data/telemetry.db
+
+  # Delete readings older than this. Set to 0 to keep everything forever.
+  retention_days: 365
+
+# Optional public JSON mirror. Deploy aws/ first, then copy its BucketName
+# output here. Credentials are loaded through boto3's standard AWS chain.
+publishing:
+  enabled: false
+  bucket: meshcoretelemetry-publicsitebucket-example
+  prefix: data
+  # region: us-west-2
+
+repeaters:
+  # `public_key` is the preferred identifier: it is the repeater's public key,
+  # or any unique prefix of it (as shown by `meshcore-cli contacts`).
+  # `name` must match the repeater's advertised name and is used when
+  # `public_key` is not set.
+  # `password` is the admin password used to log in.
+  #
+  # `path` is the hard coded out-path used to reach the repeater, as a hex
+  # string of hop hashes (key prefixes of each intermediate node, one hop
+  # after another). Each hop is `path_hash_mode + 1` bytes wide.
+  #   path: "3f9c"  -> pin this route and re-apply it whenever it drifts
+  #   path: ""      -> pin the repeater to direct / zero-hop
+  #   path: flood   -> pin the repeater to flood routing
+  #   (omitted)     -> don't manage routing, leave whatever the contact has
+  # A path is only written when it differs from the contact's current route,
+  # so pinning costs nothing when it already matches.
+  #
+  # `path_hash_mode` may be set per repeater to override device.path_hash_mode.
+  - name: Repeater 01
+    public_key: 1a2b3c4d5e6f7a8b
+    password: changeme
+    path: "3f9c"
+
+  - name: Repeater 02
+    public_key: 2b3c4d5e6f7a8b9c
+    password: changeme
+    path: "3f9c11"
+
+  - name: Repeater 03
+    public_key: 3c4d5e6f7a8b9cad
+    password: changeme
+    path: ""
+
+  - name: Repeater 04
+    public_key: 4d5e6f7a8b9cadbe
+    password: changeme
+    path: flood
+
+  - name: Repeater 05
+    public_key: 5e6f7a8b9cadbecf
+    password: changeme
+    path: "a4"
+
+  - name: Repeater 06
+    public_key: 6f7a8b9cadbecfd0
+    password: changeme
+    path: "a4c7"
+
+  - name: Repeater 07
+    public_key: 7a8b9cadbecfd0e1
+    password: changeme
+    path: "a4c7d9"
+
+  - name: Repeater 08
+    public_key: 8b9cadbecfd0e1f2
+    password: changeme
+    path: "5b"
+
+  - name: Repeater 09
+    public_key: 9cadbecfd0e1f203
+    password: changeme
+    path: "5b12"
+
+  - name: Repeater 10
+    public_key: adbecfd0e1f20314
+    password: changeme
+    path: "5b1277"

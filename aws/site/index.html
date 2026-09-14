@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SIERRA MeshCore Telemetry</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">SIERRA MeshCore network</p>
+          <h1>Repeater telemetry</h1>
+        </div>
+        <p id="updated">Loading telemetry...</p>
+      </header>
+      <section id="status" class="status" aria-live="polite"></section>
+      <section class="history" aria-labelledby="history-title">
+        <div class="history-heading">
+          <div>
+            <p class="eyebrow">History</p>
+            <h2 id="history-title">Battery levels</h2>
+          </div>
+          <div class="history-controls">
+            <div class="range-selector" aria-label="Chart range">
+              <button type="button" data-range="day" aria-pressed="true">Day</button>
+              <button type="button" data-range="week" aria-pressed="false">Week</button>
+              <button type="button" data-range="month" aria-pressed="false">Month</button>
+            </div>
+            <div class="pager">
+              <button id="previous-range" type="button" aria-label="Previous range">←</button>
+              <span id="range-label">Loading history…</span>
+              <button id="next-range" type="button" aria-label="Next range">→</button>
+            </div>
+          </div>
+        </div>
+        <p id="chart-status" class="chart-status" aria-live="polite"></p>
+        <div class="charts">
+          <article class="chart-panel">
+            <div>
+              <h3>Battery charge</h3>
+              <p>Reported or voltage-estimated percentage</p>
+            </div>
+            <div id="charge-chart" class="chart"></div>
+          </article>
+        </div>
+      </section>
+      <div class="section-heading">
+        <p class="eyebrow">Latest readings</p>
+      </div>
+      <section id="repeaters" class="grid"></section>
+    </main>
+  </body>
+</html>

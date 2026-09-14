@@ -1,0 +1,299 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  background: #0b1220;
+  color: #e6edf7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  width: min(1100px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 3rem 0;
+}
+
+header,
+.history-heading,
+.card-heading,
+dl div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(2rem, 6vw, 4rem);
+}
+
+.eyebrow {
+  color: #70d6ff;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+#updated,
+.reading-time,
+dt {
+  color: #91a0b8;
+}
+
+.status {
+  margin: 2rem 0;
+  color: #ffca6a;
+}
+
+.history {
+  margin: 3rem 0;
+}
+
+.history-heading {
+  align-items: flex-end;
+}
+
+.history-heading h2 {
+  margin-top: .35rem;
+  font-size: 1.75rem;
+}
+
+.history-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .75rem;
+}
+
+.range-selector,
+.pager {
+  display: flex;
+  align-items: center;
+  border: 1px solid #30405d;
+  border-radius: .6rem;
+  overflow: hidden;
+  background: #111c30;
+}
+
+button {
+  min-height: 2.4rem;
+  border: 0;
+  border-right: 1px solid #30405d;
+  padding: 0 .8rem;
+  background: transparent;
+  color: #b8c4d8;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+
+button:last-child {
+  border-right: 0;
+}
+
+button:hover:not(:disabled),
+button[aria-pressed="true"] {
+  background: #203552;
+  color: #fff;
+}
+
+button:focus-visible {
+  outline: 2px solid #70d6ff;
+  outline-offset: -2px;
+}
+
+button:disabled {
+  color: #526077;
+  cursor: not-allowed;
+}
+
+#range-label {
+  min-width: 15rem;
+  padding: 0 .75rem;
+  text-align: center;
+  color: #d7dfec;
+  font-size: .9rem;
+}
+
+.chart-status {
+  min-height: 1.5rem;
+  margin-top: 1rem;
+  color: #ffca6a;
+}
+
+.charts {
+  display: grid;
+  gap: 1rem;
+}
+
+.chart-panel {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid #24324a;
+  border-radius: 1rem;
+  background: #111c30;
+}
+
+.chart-panel h3 {
+  font-size: 1.1rem;
+}
+
+.chart-panel > div:first-child p {
+  margin-top: .2rem;
+  color: #91a0b8;
+  font-size: .85rem;
+}
+
+.chart {
+  min-height: 300px;
+  margin-top: .75rem;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-grid line {
+  stroke: #263650;
+  stroke-width: 1;
+}
+
+.chart-grid text {
+  fill: #91a0b8;
+  font-size: 12px;
+}
+
+.chart-empty {
+  display: grid;
+  min-height: 250px;
+  place-items: center;
+  color: #91a0b8;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1rem;
+  padding: .75rem .25rem 0;
+  border-top: 1px solid #24324a;
+  font-size: .8rem;
+}
+
+.chart-legend div {
+  display: grid;
+  grid-template-columns: .65rem auto auto;
+  align-items: center;
+  gap: .4rem;
+}
+
+.chart-legend div > span:first-child {
+  width: .65rem;
+  height: .65rem;
+  border-radius: 50%;
+}
+
+.chart-legend strong {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-heading {
+  margin-top: 3rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.card {
+  padding: 1.25rem;
+  border: 1px solid #24324a;
+  border-radius: 1rem;
+  background: #111c30;
+}
+
+.card-heading {
+  align-items: flex-start;
+}
+
+.card-heading span {
+  flex: none;
+  padding: .3rem .55rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.online {
+  background: #153f36;
+  color: #69e3bc;
+}
+
+.offline {
+  background: #46262b;
+  color: #ff9b9b;
+}
+
+dl {
+  margin: 1.25rem 0;
+}
+
+dl div {
+  padding: .5rem 0;
+  border-bottom: 1px solid #24324a;
+}
+
+dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  header,
+  .history-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .history-controls {
+    align-items: stretch;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .range-selector {
+    flex: 1;
+  }
+
+  .range-selector button {
+    flex: 1;
+  }
+
+  .pager {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  #range-label {
+    min-width: 0;
+  }
+}

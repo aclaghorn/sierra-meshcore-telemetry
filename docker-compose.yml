@@ -1,0 +1,58 @@
+services:
+  # Makes the bind-mounted data directories writable by the unprivileged
+  # uid/gid (472) that both the collector and Grafana run as.
+  init:
+    image: busybox:1.36
+    user: "0:0"
+    command: sh -c "mkdir -p /data /var/lib/grafana && chown -R 472:472 /data /var/lib/grafana"
+    volumes:
+      - ./data:/data
+      - ./grafana-data:/var/lib/grafana
+
+  collector:
+    build: .
+    image: mesh-telemetry:latest
+    restart: unless-stopped
+    user: "472:472"
+    # Group that owns /dev/ttyACM0 on the host (gid 46 / plugdev on Debian 13
+    # for Raspberry Pi 5; check with `stat -c '%G %g' /dev/ttyACM0`).
+    group_add:
+      - "${SERIAL_GID:-46}"
+      - "${AWS_CONFIG_GID:-1000}"
+    devices:
+      - "${SERIAL_PORT:-/dev/ttyACM0}:/dev/ttyACM0"
+    environment:
+      MESH_CONFIG: /config/config.yaml
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      TZ: "${TZ:-UTC}"
+      HOME: /home/collector
+      AWS_PROFILE: "${AWS_PROFILE:-default}"
+    volumes:
+      - ./config:/config:ro
+      - ./data:/data
+      - "${HOME}/.aws:/home/collector/.aws:ro"
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  grafana:
+    image: grafana/grafana-oss:11.6.1
+    restart: unless-stopped
+    user: "472:472"
+    ports:
+      - "3000:3000"
+    environment:
+      GF_INSTALL_PLUGINS: frser-sqlite-datasource
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_PASSWORD:-admin}"
+      GF_USERS_DEFAULT_THEME: dark
+      TZ: "${TZ:-UTC}"
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+      # Grafana needs write access to create the WAL side files when reading.
+      - ./data:/data
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      init:
+        condition: service_completed_successfully

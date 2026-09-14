@@ -1,0 +1,10 @@
+apiVersion: 1
+
+datasources:
+  - name: MeshCore Telemetry
+    uid: mesh-telemetry
+    type: frser-sqlite-datasource
+    access: proxy
+    isDefault: true
+    jsonData:
+      path: /data/telemetry.db

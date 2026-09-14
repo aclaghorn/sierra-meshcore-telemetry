@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Runtime data (never commit the telemetry database or Grafana state)
+data/
+grafana-data/
+
+# Local configuration contains repeater passwords
+config/config.yaml
+.env

@@ -1,0 +1,891 @@
+{
+  "uid": "meshcore-telemetry",
+  "title": "MeshCore Repeater Telemetry",
+  "tags": [
+    "meshcore",
+    "telemetry"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "5m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "repeater",
+        "label": "Repeater",
+        "type": "query",
+        "datasource": {
+          "type": "frser-sqlite-datasource",
+          "uid": "mesh-telemetry"
+        },
+        "query": "SELECT name FROM repeaters ORDER BY name ASC",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Battery voltage",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "volt",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": 3600000,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT ts AS time, name, battery_voltage AS volts FROM readings WHERE battery_voltage IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC",
+          "rawQueryText": "SELECT ts AS time, name, battery_voltage AS volts FROM readings WHERE battery_voltage IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Battery charge",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "spanNulls": 3600000,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "min"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT ts AS time, name, battery_percent AS pct FROM readings WHERE battery_percent IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC",
+          "rawQueryText": "SELECT ts AS time, name, battery_percent AS pct FROM readings WHERE battery_percent IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Temperature",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "spanNulls": 3600000,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT ts AS time, name, temperature_c AS degc FROM readings WHERE temperature_c IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC",
+          "rawQueryText": "SELECT ts AS time, name, temperature_c AS degc FROM readings WHERE temperature_c IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Current state",
+      "description": "Most recent reading per repeater, plus the last time a poll succeeded.",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "volts"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "volt"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "charge"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 25
+                    },
+                    {
+                      "color": "green",
+                      "value": 50
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "degc"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_reading"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "age_minutes"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "m"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "charge",
+            "desc": false
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [],
+          "queryText": "SELECT name, battery_voltage AS volts, battery_percent AS charge, temperature_c AS degc, ts * 1000 AS last_reading, (strftime('%s','now') - ts) / 60 AS age_minutes FROM latest_readings ORDER BY name ASC",
+          "rawQueryText": "SELECT name, battery_voltage AS volts, battery_percent AS charge, temperature_c AS degc, ts * 1000 AS last_reading, (strftime('%s','now') - ts) / 60 AS age_minutes FROM latest_readings ORDER BY name ASC"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Poll success rate (per cycle)",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT $__unixEpochGroupSeconds(ts, 3600) AS time, AVG(success) AS success_rate FROM poll_attempts WHERE ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) GROUP BY 1 ORDER BY 1 ASC",
+          "rawQueryText": "SELECT $__unixEpochGroupSeconds(ts, 3600) AS time, AVG(success) AS success_rate FROM poll_attempts WHERE ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) GROUP BY 1 ORDER BY 1 ASC"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Uptime",
+      "description": "Seconds since the repeater last rebooted; a drop to a low value means it restarted.",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 39
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": 3600000,
+            "fillOpacity": 5
+          },
+          "unit": "s",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "min"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT ts AS time, name, uptime_s AS uptime FROM stats WHERE uptime_s IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC",
+          "rawQueryText": "SELECT ts AS time, name, uptime_s AS uptime FROM stats WHERE uptime_s IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Airtime",
+      "description": "Cumulative transmit (airtime) and receive (rx_airtime) radio-on time since last reboot.",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 39
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": 3600000,
+            "fillOpacity": 5
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT ts AS time, name, airtime_ms AS airtime, rx_airtime_ms AS rx_airtime FROM stats WHERE ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC",
+          "rawQueryText": "SELECT ts AS time, name, airtime_ms AS airtime, rx_airtime_ms AS rx_airtime FROM stats WHERE ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Packet counts",
+      "description": "Cumulative packets sent/received since last reboot.",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 49
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": 3600000,
+            "fillOpacity": 5
+          },
+          "unit": "short",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT ts AS time, name, nb_sent AS sent, nb_recv AS received FROM stats WHERE ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC",
+          "rawQueryText": "SELECT ts AS time, name, nb_sent AS sent, nb_recv AS received FROM stats WHERE ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Noise floor",
+      "description": "Radio noise floor reported by the repeater at its last status check.",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 49
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": 3600000,
+            "fillOpacity": 5
+          },
+          "unit": "none",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [
+            "time"
+          ],
+          "queryText": "SELECT ts AS time, name, noise_floor_dbm AS noise_floor FROM stats WHERE noise_floor_dbm IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC",
+          "rawQueryText": "SELECT ts AS time, name, noise_floor_dbm AS noise_floor FROM stats WHERE noise_floor_dbm IS NOT NULL AND ts BETWEEN ${__from:date:seconds} AND ${__to:date:seconds} AND name IN (${repeater:singlequote}) ORDER BY ts ASC"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "name"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Repeater stats",
+      "description": "Most recent uptime/airtime/packet-count/noise-floor snapshot per repeater.",
+      "datasource": {
+        "type": "frser-sqlite-datasource",
+        "uid": "mesh-telemetry"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 59
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "uptime"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "airtime"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rx_airtime"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "noise_floor"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_reading"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "age_minutes"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "m"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "name",
+            "desc": false
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "frser-sqlite-datasource",
+            "uid": "mesh-telemetry"
+          },
+          "queryType": "table",
+          "timeColumns": [],
+          "queryText": "SELECT name, uptime_s AS uptime, airtime_ms AS airtime, rx_airtime_ms AS rx_airtime, noise_floor_dbm AS noise_floor, nb_sent AS sent, nb_recv AS received, (direct_dups + flood_dups) AS dup_pkts, recv_errors AS errors, ts * 1000 AS last_reading, (strftime('%s','now') - ts) / 60 AS age_minutes FROM latest_stats ORDER BY name ASC",
+          "rawQueryText": "SELECT name, uptime_s AS uptime, airtime_ms AS airtime, rx_airtime_ms AS rx_airtime, noise_floor_dbm AS noise_floor, nb_sent AS sent, nb_recv AS received, (direct_dups + flood_dups) AS dup_pkts, recv_errors AS errors, ts * 1000 AS last_reading, (strftime('%s','now') - ts) / 60 AS age_minutes FROM latest_stats ORDER BY name ASC"
+        }
+      ]
+    }
+  ]
+}
