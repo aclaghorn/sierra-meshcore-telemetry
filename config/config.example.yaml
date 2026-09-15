@@ -41,8 +41,12 @@ polling:
   min_request_timeout_seconds: 20
 
   # Re-login before every telemetry request instead of relying on the
-  # repeater keeping the session open.
+  # repeater's persistent ACL between requests.
   always_login: true
+
+  # When always_login is false, log in on startup and again after this many
+  # seconds. A telemetry failure also forces login on the next retry.
+  reauthenticate_interval_seconds: 43200
 
 storage:
   path: /data/telemetry.db

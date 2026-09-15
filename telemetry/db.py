@@ -323,9 +323,15 @@ class Database:
         return values
 
     async def record_attempt(
-        self, key: str, name: str, success: bool, attempts: int, error: str | None
+        self,
+        key: str,
+        name: str,
+        success: bool,
+        attempts: int,
+        error: str | None,
+        ts: int | None = None,
     ) -> None:
-        stamp = int(time.time())
+        stamp = int(ts if ts is not None else time.time())
 
         def _run() -> None:
             conn = self._require_conn()

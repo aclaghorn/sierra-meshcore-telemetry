@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import time
 from typing import Any
 
 from meshcore import EventType, MeshCore
@@ -37,8 +38,18 @@ class Collector:
         self.db = db
         self._mc: MeshCore | None = None
         self._device_hash_mode: int | None = None
+        self._last_authenticated: dict[str, float] = {}
 
     def update_config(self, config: Config) -> None:
+        previous_passwords = {
+            repeater.key: repeater.password for repeater in self.config.repeaters
+        }
+        current_passwords = {
+            repeater.key: repeater.password for repeater in config.repeaters
+        }
+        for key in set(self._last_authenticated):
+            if previous_passwords.get(key) != current_passwords.get(key):
+                self._last_authenticated.pop(key)
         self.config = config
 
     async def connect(self) -> None:
@@ -227,7 +238,19 @@ class Collector:
                 f"no login response from {repeater.name} "
                 f"(waited {self.config.polling.min_request_timeout_seconds:.0f}s)"
             )
+        self._last_authenticated[repeater.key] = time.monotonic()
         logger.debug("%s: login ok", repeater.name)
+
+    def _login_required(self, repeater: RepeaterConfig) -> bool:
+        if self.config.polling.always_login:
+            return True
+        last_authenticated = self._last_authenticated.get(repeater.key)
+        if last_authenticated is None:
+            return True
+        return (
+            time.monotonic() - last_authenticated
+            >= self.config.polling.reauthenticate_interval_seconds
+        )
 
     async def _request_telemetry(
         self, contact: dict[str, Any], repeater: RepeaterConfig
@@ -280,9 +303,15 @@ class Collector:
             )
 
         await self._apply_path(contact, repeater)
-        if self.config.polling.always_login:
+        logged_in = self._login_required(repeater)
+        if logged_in:
             await self._login(contact, repeater)
-        lpp = await self._request_telemetry(contact, repeater)
+        try:
+            lpp = await self._request_telemetry(contact, repeater)
+        except TelemetryError:
+            if not logged_in:
+                self._last_authenticated.pop(repeater.key, None)
+            raise
         status = await self._request_status(contact, repeater)
         return lpp, status
 

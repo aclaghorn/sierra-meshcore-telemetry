@@ -130,7 +130,8 @@ restart.
 | `polling.min_request_timeout_seconds` | Floor for the firmware-suggested timeout |
 | `device.path_hash_mode` | Bytes per hop in a route (see below) |
 | `device.tx_power` | Companion TX power in dBm (see below) |
-| `polling.always_login` | Re-login before each request instead of reusing the session |
+| `polling.always_login` | Re-login before each request instead of reusing authentication |
+| `polling.reauthenticate_interval_seconds` | Re-login interval when `always_login` is false (43200 = 12 hours) |
 | `storage.retention_days` | Readings older than this are purged (0 = keep forever) |
 
 ### Repeaters

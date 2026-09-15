@@ -41,6 +41,7 @@ class PollingConfig:
     request_timeout_seconds: float = 0.0
     min_request_timeout_seconds: float = 20.0
     always_login: bool = True
+    reauthenticate_interval_seconds: float = 43200.0
 
 
 @dataclass(frozen=True)
@@ -241,6 +242,13 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
             allow_zero=True,
         ),
         always_login=bool(polling_raw.get("always_login", PollingConfig.always_login)),
+        reauthenticate_interval_seconds=_positive(
+            polling_raw.get(
+                "reauthenticate_interval_seconds",
+                PollingConfig.reauthenticate_interval_seconds,
+            ),
+            "polling.reauthenticate_interval_seconds",
+        ),
     )
 
     retention_days = int(storage_raw.get("retention_days", StorageConfig.retention_days))

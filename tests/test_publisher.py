@@ -41,7 +41,7 @@ class PublisherTest(unittest.IsolatedAsyncioTestCase):
             ts=1_789_416_000,
         )
         await self.db.record_attempt(
-            "0123456789abcdef", "Hilltop", True, 1, "sensitive failure detail"
+            "0123456789abcdef", "Hilltop", True, 1, "sensitive failure detail", ts=1_789_416_000
         )
 
     async def asyncTearDown(self) -> None:
