@@ -129,6 +129,18 @@ _STATUS_FIELDS: dict[str, str] = {
     "recv_errors": "recv_errors",
 }
 
+# Everything an ingest report only sends for a repeater we have reached: a
+# node we have never read carries no measurements at all, not zeroed ones.
+_INGEST_METRIC_FIELDS: tuple[str, ...] = (
+    "battery_voltage",
+    "battery_percent",
+    "battery_percent_source",
+    "temperature_c",
+    "humidity",
+    "pressure",
+    *(column for column in _STATUS_FIELDS.values() if column != "battery_mv"),
+)
+
 
 def _extract(lpp: Iterable[dict[str, Any]] | None) -> dict[str, float | str | None]:
     """Pull the interesting fields out of a parsed Cayenne LPP frame.
@@ -433,6 +445,71 @@ class Database:
                     ],
                     "days": [dict(row) for row in day_rows],
                 },
+            }
+
+        async with self._lock:
+            return await asyncio.to_thread(_run)
+
+    async def ingest_report(self, generated_at: int | None = None) -> dict[str, Any]:
+        """Return the latest state of every repeater, keyed by public key.
+
+        Shaped for the mesh.repeater ingest API: every monitored repeater is
+        included on every report, and anything that could not be read stays
+        NULL rather than becoming a zero.
+        """
+        stamp = int(generated_at if generated_at is not None else time.time())
+
+        def _run() -> dict[str, Any]:
+            conn = self._require_conn()
+            rows = conn.execute(
+                """
+                SELECT
+                    p.public_key, p.key, p.name, p.last_attempt, p.last_success,
+                    r.battery_voltage, r.battery_percent, r.battery_percent_source,
+                    r.temperature_c, r.humidity, r.pressure,
+                    s.uptime_s, s.airtime_ms, s.rx_airtime_ms,
+                    s.noise_floor_dbm, s.last_rssi_dbm, s.last_snr_db,
+                    s.tx_queue_len, s.nb_sent, s.nb_recv, s.sent_flood,
+                    s.sent_direct, s.recv_flood, s.recv_direct, s.direct_dups,
+                    s.flood_dups, s.full_evts, s.recv_errors,
+                    a.success AS latest_attempt_success
+                FROM repeaters p
+                LEFT JOIN readings r ON r.id = (
+                    SELECT id FROM readings
+                    WHERE repeater_key = p.key ORDER BY ts DESC, id DESC LIMIT 1
+                )
+                LEFT JOIN stats s ON s.id = (
+                    SELECT id FROM stats
+                    WHERE repeater_key = p.key ORDER BY ts DESC, id DESC LIMIT 1
+                )
+                LEFT JOIN poll_attempts a ON a.id = (
+                    SELECT id FROM poll_attempts
+                    WHERE repeater_key = p.key ORDER BY ts DESC, id DESC LIMIT 1
+                )
+                ORDER BY p.name
+                """
+            ).fetchall()
+
+            repeaters = []
+            for row in rows:
+                item = dict(row)
+                fallback_key = item.pop("key")
+                item["id"] = item.pop("public_key") or fallback_key
+                latest_success = item.pop("latest_attempt_success")
+                item["online"] = bool(latest_success) if latest_success is not None else False
+                # The ingest API's vocabulary for a reading the node supplied.
+                if item["battery_percent_source"] == "device":
+                    item["battery_percent_source"] = "measured"
+                if item["last_success"] is None:
+                    # Never reached: readings must not be published as zeroes.
+                    for field in _INGEST_METRIC_FIELDS:
+                        item[field] = None
+                repeaters.append(item)
+
+            return {
+                "schema_version": 1,
+                "generated_at": datetime.fromtimestamp(stamp, UTC).isoformat(),
+                "repeaters": repeaters,
             }
 
         async with self._lock:

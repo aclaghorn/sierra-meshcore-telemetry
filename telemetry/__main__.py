@@ -11,10 +11,10 @@ import signal
 import time
 from pathlib import Path
 
-from .config import DEFAULT_CONFIG_PATH, Config, ConfigError, load_config
+from .config import DEFAULT_CONFIG_PATH, Config, ConfigError, PublishingConfig, load_config
 from .collector import Collector, DeviceError
 from .db import Database
-from .publisher import PublicationError, S3Publisher
+from .publisher import HttpPublisher, PublicationError, S3Publisher
 
 logger = logging.getLogger("telemetry")
 
@@ -38,6 +38,27 @@ def _reload_config(path: Path, current: Config) -> Config:
     except ConfigError as exc:
         logger.error("Keeping previous configuration, reload failed: %s", exc)
         return current
+
+
+def _build_publishers(
+    publishing: PublishingConfig, db: Database
+) -> tuple[S3Publisher | None, HttpPublisher | None]:
+    """Rebuild the publishers a (possibly reloaded) configuration asks for."""
+    if not publishing.enabled:
+        return None, None
+
+    s3 = S3Publisher(publishing, db) if publishing.bucket else None
+    http = (
+        HttpPublisher(publishing.http_endpoints, db)
+        if publishing.http_endpoints
+        else None
+    )
+    if http is not None:
+        logger.info(
+            "Reporting telemetry to %s",
+            ", ".join(endpoint.name for endpoint in publishing.http_endpoints),
+        )
+    return s3, http
 
 
 async def _connect_with_backoff(collector: Collector, stop: asyncio.Event) -> bool:
@@ -75,18 +96,17 @@ async def run(config_path: Path) -> None:
 
     collector = Collector(config, db)
     publisher: S3Publisher | None = None
+    http_publisher: HttpPublisher | None = None
+    publishing_config: PublishingConfig | None = None
     connected = False
 
     try:
         while not stop.is_set():
             config = _reload_config(config_path, config)
             collector.update_config(config)
-            if config.publishing.enabled and (
-                publisher is None or publisher.config != config.publishing
-            ):
-                publisher = S3Publisher(config.publishing, db)
-            elif not config.publishing.enabled:
-                publisher = None
+            if config.publishing != publishing_config:
+                publisher, http_publisher = _build_publishers(config.publishing, db)
+                publishing_config = config.publishing
 
             if not connected:
                 connected = await _connect_with_backoff(collector, stop)
@@ -114,6 +134,12 @@ async def run(config_path: Path) -> None:
                     await publisher.publish()
                 except PublicationError as exc:
                     logger.error("Telemetry publication failed: %s", exc)
+
+            if http_publisher is not None:
+                try:
+                    await http_publisher.publish()
+                except PublicationError as exc:
+                    logger.error("Telemetry reporting failed: %s", exc)
 
             elapsed = time.monotonic() - started
             sleep_for = max(0.0, config.polling.interval_seconds - elapsed)

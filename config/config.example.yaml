@@ -54,13 +54,26 @@ storage:
   # Delete readings older than this. Set to 0 to keep everything forever.
   retention_days: 365
 
-# Optional public JSON mirror. Deploy aws/ first, then copy its BucketName
-# output here. Credentials are loaded through boto3's standard AWS chain.
+# Optional publication of each cycle's results. Both mirrors are gated on
+# `enabled`; set at least one of `bucket` or `http_endpoints`.
+#
+# S3 mirror: deploy aws/ first, then copy its BucketName output here.
+# Credentials are loaded through boto3's standard AWS chain.
 publishing:
   enabled: false
   bucket: meshcoretelemetry-publicsitebucket-example
   prefix: data
   # region: us-west-2
+
+  # Ingest APIs that receive a complete report after every cycle: every
+  # repeater, reachable or not, identified by its public key. Each endpoint
+  # needs an https URL and the bearer token issued for this collector.
+  # Keep real tokens in config/config.yaml, which is not in git.
+  http_endpoints:
+    - name: Sierra Grid Team
+      url: https://data.sierragridteam.org/api/v1/ingest/mesh.repeater
+      bearer_token: replace-me
+      # timeout_seconds: 30
 
 repeaters:
   # `public_key` is the preferred identifier: it is the repeater's public key,

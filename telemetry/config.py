@@ -51,11 +51,22 @@ class StorageConfig:
 
 
 @dataclass(frozen=True)
+class HttpEndpointConfig:
+    """An ingest API that receives a report after every collection cycle."""
+
+    name: str
+    url: str
+    bearer_token: str
+    timeout_seconds: float = 30.0
+
+
+@dataclass(frozen=True)
 class PublishingConfig:
     enabled: bool = False
     bucket: str | None = None
     prefix: str = "data"
     region: str | None = None
+    http_endpoints: tuple[HttpEndpointConfig, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -173,6 +184,47 @@ def _parse_repeaters(raw: Any, default_hash_mode: int | None) -> tuple[RepeaterC
     return tuple(repeaters)
 
 
+def _parse_http_endpoints(raw: Any) -> tuple[HttpEndpointConfig, ...]:
+    if raw is None:
+        return ()
+    if not isinstance(raw, list):
+        raise ConfigError("'publishing.http_endpoints' must be a list")
+
+    endpoints: list[HttpEndpointConfig] = []
+    for index, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            raise ConfigError(f"publishing.http_endpoints[{index}] must be a mapping")
+
+        url = str(entry.get("url") or "").strip()
+        if not url:
+            raise ConfigError(f"publishing.http_endpoints[{index}] needs a 'url'")
+        if not url.lower().startswith("https://"):
+            raise ConfigError(
+                f"publishing.http_endpoints[{index}] 'url' must be https:// "
+                "so the bearer token is not sent in the clear"
+            )
+
+        token = entry.get("bearer_token")
+        if token is None or not str(token).strip():
+            raise ConfigError(
+                f"publishing.http_endpoints[{index}] needs a 'bearer_token'"
+            )
+
+        endpoints.append(
+            HttpEndpointConfig(
+                name=str(entry.get("name") or url),
+                url=url,
+                bearer_token=str(token).strip(),
+                timeout_seconds=_positive(
+                    entry.get("timeout_seconds", HttpEndpointConfig.timeout_seconds),
+                    f"publishing.http_endpoints[{index}].timeout_seconds",
+                ),
+            )
+        )
+
+    return tuple(endpoints)
+
+
 def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
     """Read, validate and return the configuration."""
     path = Path(path)
@@ -264,8 +316,12 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
     publishing_bucket = publishing_raw.get("bucket")
     if publishing_bucket is not None:
         publishing_bucket = str(publishing_bucket).strip()
-    if publishing_enabled and not publishing_bucket:
-        raise ConfigError("'publishing.bucket' is required when publishing is enabled")
+    http_endpoints = _parse_http_endpoints(publishing_raw.get("http_endpoints"))
+    if publishing_enabled and not publishing_bucket and not http_endpoints:
+        raise ConfigError(
+            "'publishing' needs a 'bucket' or at least one 'http_endpoints' entry "
+            "when it is enabled"
+        )
 
     publishing_prefix = str(
         publishing_raw.get("prefix", PublishingConfig.prefix)
@@ -282,6 +338,7 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> Config:
         bucket=publishing_bucket,
         prefix=publishing_prefix,
         region=publishing_region,
+        http_endpoints=http_endpoints,
     )
 
     return Config(
