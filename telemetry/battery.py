@@ -12,19 +12,20 @@ available here. Treat the resulting percentage as indicative, not precise.
 
 from __future__ import annotations
 
-# (voltage, percent) pairs from the INR18650-35E datasheet's 0.2C discharge
-# curve at 23C, sorted ascending by voltage for interpolation.
+# Approximate 0.2C discharge curve for a Samsung INR18650-35E cell,
+# normalized to a 3.30 Ah total capacity. The points are sorted ascending by
+# voltage for interpolation and match the shape in the reference graph.
 _DISCHARGE_CURVE: tuple[tuple[float, float], ...] = (
-    (2.65, 0.0),
-    (3.67, 10.0),
-    (3.71, 20.0),
-    (3.76, 30.0),
-    (3.80, 40.0),
-    (3.83, 50.0),
-    (3.87, 60.0),
-    (3.89, 70.0),
-    (3.92, 80.0),
-    (4.00, 90.0),
+    (2.80, 0.0),
+    (3.20, 10.0),
+    (3.42, 20.0),
+    (3.55, 30.0),
+    (3.66, 40.0),
+    (3.78, 50.0),
+    (3.88, 60.0),
+    (3.96, 70.0),
+    (4.05, 80.0),
+    (4.13, 90.0),
     (4.20, 100.0),
 )
 
