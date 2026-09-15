@@ -114,6 +114,40 @@ Later cycles update only the current UTC day. Public files never include
 repeater keys, routes, raw payloads, passwords, or poll error text. Publishing
 failures are logged and do not interrupt local collection.
 
+## Reporting to an ingest API
+
+After every cycle the collector can also POST a complete report to one or more
+ingest endpoints, such as [The Grid](https://data.sierragridteam.org). This is
+gated on the same `publishing.enabled` flag; `bucket` and `http_endpoints` are
+independent, so either or both may be configured:
+
+```yaml
+publishing:
+  enabled: true
+  http_endpoints:
+    - name: Sierra Grid Team
+      url: https://data.sierragridteam.org/api/v1/ingest/mesh.repeater
+      bearer_token: <token issued for this collector>
+      # timeout_seconds: 30
+```
+
+Unlike the S3 mirror, a report identifies each repeater by its **public key**
+(as configured in `repeaters[].public_key`), because the receiving service
+matches that key — or a unique prefix of it — against nodes it already knows.
+A repeater configured by name only has no key to report and is skipped with a
+warning. Nothing else leaves the collector: no passwords, routes, raw payloads
+or error text.
+
+Every report is the complete current set of monitored repeaters, including the
+ones this cycle could not reach. Those carry `last_success: null` and null
+readings rather than zeroes, which is what lets the service tell "unreachable"
+apart from "reporting zero". Endpoints must be `https://`, since the token is a
+bearer credential. `429` and `5xx` responses are retried with backoff (honouring
+`Retry-After`); `4xx` responses are logged and not retried, and any warnings the
+API returns are logged. Reporting failures never interrupt local collection.
+
+Keep real tokens in `config/config.yaml`, which is not in git.
+
 ## Configuration
 
 See [config/config.example.yaml](./config/config.example.yaml) for the full,
