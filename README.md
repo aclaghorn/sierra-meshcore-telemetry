@@ -251,6 +251,22 @@ Find keys and current paths with the bundled CLI:
 docker compose exec collector meshcore-cli -s /dev/ttyACM0 contacts
 ```
 
+### Adding missing contacts
+
+Add repeaters from `config/config.yaml` to the companion using their full
+public keys. Stop the collector first so it releases the serial port:
+
+```bash
+docker compose stop collector
+uv run scripts/add_contacts.py
+docker compose start collector
+```
+
+Use `--config PATH` to select another configuration file. Existing contacts
+are left unchanged. New contacts start with flood routing; the collector
+applies their configured paths before polling. No repeater password is needed
+to add a contact.
+
 ## Data model
 
 `data/telemetry.db` (SQLite, WAL mode):
