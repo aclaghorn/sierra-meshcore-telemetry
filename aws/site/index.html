@@ -4,7 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SIERRA MeshCore Telemetry</title>
+    <link rel="stylesheet" href="/vendor/uPlot-1.6.32.min.css">
     <link rel="stylesheet" href="/styles.css">
+    <script src="/vendor/uPlot-1.6.32.min.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -21,31 +23,67 @@
         <div class="history-heading">
           <div>
             <p class="eyebrow">History</p>
-            <h2 id="history-title">Battery levels</h2>
+            <h2 id="history-title">Battery charge</h2>
           </div>
           <div class="history-controls">
-            <div class="range-selector" aria-label="Chart range">
-              <button type="button" data-range="day" aria-pressed="true">Day</button>
-              <button type="button" data-range="week" aria-pressed="false">Week</button>
-              <button type="button" data-range="month" aria-pressed="false">Month</button>
-            </div>
-            <div class="pager">
-              <button id="previous-range" type="button" aria-label="Previous range">←</button>
-              <span id="range-label">Loading history…</span>
-              <button id="next-range" type="button" aria-label="Next range">→</button>
+            <div class="time-picker">
+              <div class="button-group">
+                <button id="shift-back" type="button" aria-label="Move range back" title="Move range back">‹</button>
+                <button id="picker-toggle" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="picker-panel">
+                  <span aria-hidden="true">◷</span>
+                  <span id="range-label">Last 24 hours</span>
+                  <span aria-hidden="true" class="caret">▾</span>
+                </button>
+                <button id="shift-forward" type="button" aria-label="Move range forward" title="Move range forward">›</button>
+                <button id="zoom-out" type="button" aria-label="Zoom out" title="Zoom out (double the range)">−</button>
+                <button id="refresh" type="button" aria-label="Refresh" title="Refresh">↻</button>
+              </div>
+              <div id="picker-panel" class="picker-panel" role="dialog" aria-label="Time range" hidden>
+                <form id="absolute-form" class="picker-absolute">
+                  <h3>Absolute time range</h3>
+                  <label for="range-from">From</label>
+                  <input id="range-from" name="from" autocomplete="off" spellcheck="false">
+                  <label for="range-to">To</label>
+                  <input id="range-to" name="to" autocomplete="off" spellcheck="false">
+                  <p class="picker-hint">
+                    Dates like <code>2026-10-01</code> or <code>2026-10-01 18:00</code>,
+                    or relative times like <code>now-7d</code>, <code>now/d</code>.
+                  </p>
+                  <p id="picker-error" class="picker-error" aria-live="polite"></p>
+                  <button type="submit" class="primary">Apply time range</button>
+                  <div class="picker-timezone">
+                    <span>Time zone</span>
+                    <div class="button-group" role="group" aria-label="Time zone">
+                      <button type="button" data-timezone="local" aria-pressed="true">Browser</button>
+                      <button type="button" data-timezone="utc" aria-pressed="false">UTC</button>
+                    </div>
+                  </div>
+                </form>
+                <div class="picker-presets">
+                  <input id="preset-search" type="search" placeholder="Search quick ranges" aria-label="Search quick ranges">
+                  <ul id="preset-list"></ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+        <div class="metric-selector button-group" role="group" aria-label="Metric"></div>
         <p id="chart-status" class="chart-status" aria-live="polite"></p>
-        <div class="charts">
-          <article class="chart-panel">
+        <article class="chart-panel">
+          <div class="chart-panel-heading">
             <div>
-              <h3>Battery charge</h3>
-              <p>Reported or voltage-estimated percentage</p>
+              <h3 id="chart-title">Battery charge</h3>
+              <p id="chart-description">Reported or voltage-estimated percentage</p>
             </div>
-            <div id="charge-chart" class="chart"></div>
-          </article>
-        </div>
+            <div id="focus" class="focus" hidden>
+              <span>Showing <strong id="focus-name"></strong></span>
+              <button id="clear-focus" type="button">Show all</button>
+            </div>
+          </div>
+          <div id="chart" class="chart"></div>
+          <div id="chart-legend" class="chart-legend"></div>
+          <p class="chart-hint">Drag across the chart to zoom. Click a repeater to show only its line; Ctrl/⌘-click to add or remove one.</p>
+        </article>
       </section>
       <div class="section-heading">
         <p class="eyebrow">Latest readings</p>
